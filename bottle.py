@@ -212,7 +212,11 @@ class lazy_attribute(object):
 
 
 class BottleException(Exception):
-    """ A base class for exceptions used by bottle. """
+    """
+    A base class for exceptions used by bottle.
+
+    所有bottle 异常的基类
+    """
     pass
 
 
@@ -226,60 +230,98 @@ class BottleException(Exception):
 
 
 class RouteError(BottleException):
-    """ This is a base class for all routing related exceptions """
+    """
+    This is a base class for all routing related exceptions
+
+    所有路由相关异常的基类
+    """
 
 
 class RouteReset(BottleException):
-    """ If raised by a plugin or request handler, the route is reset and all
-        plugins are re-applied. """
+    """
+    If raised by a plugin or request handler, the route is reset and all
+    plugins are re-applied.
+
+    如果是被插件或者请求处理器抛出，路由被重置，且所有插件被重新应用。
+    """
+    # TODO GARRETT
 
 class RouterUnknownModeError(RouteError): pass
 
 
 class RouteSyntaxError(RouteError):
-    """ The route parser found something not supported by this router. """
+    """
+    The route parser found something not supported by this router.
+
+    路由器的路由解析器发现不支持内容
+    """
 
 
 class RouteBuildError(RouteError):
-    """ The route could not be built. """
+    """
+    The route could not be built.
+
+    路由无法创建
+    """
 
 
 def _re_flatten(p):
-    ''' Turn all capturing groups in a regular expression pattern into
-        non-capturing groups. '''
+    # TODO GARRETT
+    """
+    Turn all capturing groups in a regular expression pattern into
+    non-capturing groups.
+    """
     if '(' not in p: return p
     return re.sub(r'(\\*)(\(\?P<[^>]+>|\((?!\?))',
         lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:', p)
 
 
 class Router(object):
-    ''' A Router is an ordered collection of route->target pairs. It is used to
-        efficiently match WSGI requests against a number of routes and return
-        the first target that satisfies the request. The target may be anything,
-        usually a string, ID or callable object. A route consists of a path-rule
-        and a HTTP method.
+    """
+    A Router is an ordered collection of route->target pairs. It is used to
+    efficiently match WSGI requests against a number of routes and return
+    the first target that satisfies the request. The target may be anything,
+    usually a string, ID or callable object. A route consists of a path-rule
+    and a HTTP method.
 
-        The path-rule is either a static path (e.g. `/contact`) or a dynamic
-        path that contains wildcards (e.g. `/wiki/<page>`). The wildcard syntax
-        and details on the matching order are described in docs:`routing`.
-    '''
+    The path-rule is either a static path (e.g. `/contact`) or a dynamic
+    path that contains wildcards (e.g. `/wiki/<page>`). The wildcard syntax
+    and details on the matching order are described in docs:`routing`.
+
+    Router是一个有序的集合，集合的内容是route->target键值对。对于一系列路由，它用于高效
+    的匹配WSGI请求。 其将返回第一个满足请求的target。 target可以是任何东西，通常是string
+    、ID、callable对象。一个路由包含一个路径规则（path-rule）和一 个HTTP method。
+
+    路径规则可以是静态路径，如/contact；也可以是带有通配符的动态路径，如/wiki/<page>。
+    通配符语法和匹配顺序的详情仔文档’routing‘中有详细的描述。
+    """
 
     default_pattern = '[^/]+'
     default_filter  = 're'
 
     #: The current CPython regexp implementation does not allow more
     #: than 99 matching groups per regular expression.
+
+    #: 当前CPython的regexp实现，不允许每个正则表达式有超过99个matching groups
     _MAX_GROUPS_PER_PATTERN = 99
 
     def __init__(self, strict=False):
+        # 顺序存储所有规则
         self.rules    = [] # All rules in order
-        self._groups  = {} # index of regexes to find them in dyna_routes
+        # 给dyna_routes寻找regexp的索引
+        self._groups  = {} # index of regexps to find them in dyna_routes
+        # Url Builder的数据结构
         self.builder  = {} # Data structure for the url builder
+        # 静态路由的寻找结构 TODO GARRETT
         self.static   = {} # Search structure for static routes
+        # 动态路由
         self.dyna_routes   = {}
+        # 动态路由的寻找结构 TODO GARRETT
         self.dyna_regexes  = {} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
+        #: 静态路由是否需要第一个检查 True：要 False 不要
         self.strict_order = strict
+        # 过滤器
         self.filters = {
             're':    lambda conf:
                 (_re_flatten(conf or self.default_pattern), None, None),
@@ -288,9 +330,13 @@ class Router(object):
             'path':  lambda conf: (r'.+?', None, None)}
 
     def add_filter(self, name, func):
-        ''' Add a filter. The provided function is called with the configuration
+        """ Add a filter. The provided function is called with the configuration
         string as parameter and must return a (regexp, to_python, to_url) tuple.
-        The first element is a string, the last two are callables or None. '''
+        The first element is a string, the last two are callables or None.
+
+        增加一个过滤器.传入的function的参数是配置的string。并且必须返回一个tuple（regexp,
+        to_python, to_url)。tuple的第一个元素是string，剩余两个元素是callables或者None。
+        """
         self.filters[name] = func
 
     rule_syntax = re.compile('(\\\\*)'\
@@ -611,6 +657,7 @@ class Bottle(object):
 
     @cached_property
     def _hooks(self):
+        # { name0: list0; name1: list1 ...}
         return dict((name, []) for name in self.__hook_names)
 
     def add_hook(self, name, func):
