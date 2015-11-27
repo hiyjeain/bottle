@@ -266,14 +266,18 @@ class RouteBuildError(RouteError):
 
 
 def _re_flatten(p):
-    # TODO GARRETT
     """
     Turn all capturing groups in a regular expression pattern into
     non-capturing groups.
+
+    将一个正则表达式中的捕获分组转换为非捕获分组
+
+    all (...) and (P<...>...) to (?:...)
     """
-    if '(' not in p: return p
+    if '(' not in p:
+        return p
     return re.sub(r'(\\*)(\(\?P<[^>]+>|\((?!\?))',
-        lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:', p)
+                  lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:', p)
 
 
 class Router(object):
@@ -319,7 +323,7 @@ class Router(object):
         # 动态路由的寻找结构 TODO GARRETT
         self.dyna_regexes  = {} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
-        #: 静态路由是否需要第一个检查 True：要 False 不要
+        #: 静态路由是否不需要第一个检查 True：不要 False 要
         self.strict_order = strict
         # 过滤器
         self.filters = {
@@ -339,30 +343,65 @@ class Router(object):
         """
         self.filters[name] = func
 
-    rule_syntax = re.compile('(\\\\*)'\
-        '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
-          '|(?:<([a-zA-Z_][a-zA-Z_0-9]*)?(?::([a-zA-Z_]*)'\
-            '(?::((?:\\\\.|[^\\\\>]+)+)?)?)?>))')
+    # :a9
+    # \:a9
+    # \:#fjeifjei#
+    # \\\\:a9#fjeijf#
+    # OR
+    # \<a9:aaaa>
+    # \<a9:aaaa:hehe>
+    rule_syntax = re.compile('(\\\\*)(?:'
+                                        '(?:'
+                                            ':([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?'
+                                        ')'
+                                        '|'
+                                        '(?:'
+                                            '<([a-zA-Z_][a-zA-Z_0-9]*)?'
+                                            '(?:'
+                                                ':([a-zA-Z_]*)'
+                                                '(?:'
+                                                    ':('
+                                                        '(?:\\\\.|[^\\\\>]+)+'
+                                                    ')?'
+                                                ')?'
+                                            ')?>'
+                                        ')'
+                                    ')')
 
     def _itertokens(self, rule):
+        """
+        prefix 作用： 如果name之前有反斜杠backslash，那么表示name需要转义，prefix用于储存转义的内容作为name，并再之后yield
+        offset 作用： 如果match与match之间有内容，则以其为name yield出。
+        """
         offset, prefix = 0, ''
         for match in self.rule_syntax.finditer(rule):
             prefix += rule[offset:match.start()]
-            g = match.groups()
-            if len(g[0])%2: # Escaped wildcard
-                prefix += match.group(0)[len(g[0]):]
+            match_groups = match.groups()
+            if len(match_groups[0]) % 2: # Escaped wildcard 开头反斜杠为单数
+                prefix += match.group(0)[len(match_groups[0]):]
                 offset = match.end()
                 continue
             if prefix:
                 yield prefix, None, None
-            name, filtr, conf = g[4:7] if g[2] is None else g[1:4]
+            name, filtr, conf = match_groups[4:7] if match_groups[2] is None else match_groups[1:4]
             yield name, filtr or 'default', conf or None
             offset, prefix = match.end(), ''
         if offset <= len(rule) or prefix:
             yield prefix+rule[offset:], None, None
 
     def add(self, rule, method, target, name=None):
-        ''' Add a new rule or replace the target for an existing rule. '''
+        """
+        Add a new rule or replace the target for an existing rule.
+
+        添加一个新的规则，或者替换一个已经存在的规则
+        受影响属性：
+        self.builder
+        self.static
+        self.dyna_routes
+        self.dyna_regexes
+        self._groups
+        """
+        # 找到的匿名通配符个数
         anons     = 0    # Number of anonymous wildcards found
         keys      = []   # Names of keys
         pattern   = ''   # Regular expression pattern with named groups
@@ -373,7 +412,8 @@ class Router(object):
         for key, mode, conf in self._itertokens(rule):
             if mode:
                 is_static = False
-                if mode == 'default': mode = self.default_filter
+                if mode == 'default':
+                    mode = self.default_filter
                 mask, in_filter, out_filter = self.filters[mode](conf)
                 if not key:
                     pattern += '(?:%s)' % mask
@@ -382,17 +422,20 @@ class Router(object):
                 else:
                     pattern += '(?P<%s>%s)' % (key, mask)
                     keys.append(key)
-                if in_filter: filters.append((key, in_filter))
+                if in_filter:
+                    filters.append((key, in_filter))
                 builder.append((key, out_filter or str))
             elif key:
                 pattern += re.escape(key)
                 builder.append((None, key))
 
         self.builder[rule] = builder
-        if name: self.builder[name] = builder
+        if name:
+            self.builder[name] = builder
 
         if is_static and not self.strict_order:
             self.static.setdefault(method, {})
+            # TODO GARRETT
             self.static[method][self.build(rule)] = (target, None)
             return
 
