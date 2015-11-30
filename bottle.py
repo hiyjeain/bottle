@@ -315,6 +315,10 @@ class Router(object):
         # 给dyna_routes寻找regexp的索引
         self._groups  = {} # index of regexps to find them in dyna_routes
         # Url Builder的数据结构
+        # {rule: [
+        #           (key(string), out_filter(function))...
+        #        ]
+        # }
         self.builder  = {} # Data structure for the url builder
         # 静态路由的寻找结构 TODO GARRETT
         self.static   = {} # Search structure for static routes
@@ -403,9 +407,12 @@ class Router(object):
         """
         # 找到的匿名通配符个数
         anons     = 0    # Number of anonymous wildcards found
+        # 找到的正则分组名
         keys      = []   # Names of keys
+        # 带有分组名的正则表达式，用于匹配(切割)rule
         pattern   = ''   # Regular expression pattern with named groups
         filters   = []   # Lists of wildcard input filters
+        # (key(string), out_filter(function))
         builder   = []   # Data structure for the URL builder
         is_static = True
 
