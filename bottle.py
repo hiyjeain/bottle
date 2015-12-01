@@ -312,20 +312,31 @@ class Router(object):
     def __init__(self, strict=False):
         # 顺序存储所有规则
         self.rules    = [] # All rules in order
+
         # 给dyna_routes寻找regexp的索引
         self._groups  = {} # index of regexps to find them in dyna_routes
-        # Url Builder的数据结构
+
+        # Url Builder的数据结构，最终被build方法使用
         # {rule: [
-        #           (key(string), out_filter(function))...
+        #           (key, out_filter)...
         #        ]
         # }
         self.builder  = {} # Data structure for the url builder
-        # 静态路由的寻找结构 TODO GARRETT
+
+        # 静态路由的寻找结构，最终被match方法使用
+        # {method: {(url: (target, None))...}}
         self.static   = {} # Search structure for static routes
+
         # 动态路由
+        # {method: [whole_rule...]}
+        # whole_rule:
+        # (rule, flatpat, target, getargs)
         self.dyna_routes   = {}
-        # 动态路由的寻找结构 TODO GARRETT
+
+        # 动态路由的寻找结构，最终被match方法使用
+        # {method: [(combined_regexp.match, [(target, getargs)...])...]}
         self.dyna_regexes  = {} # Search structure for dynamic routes
+
         #: If true, static routes are no longer checked first.
         #: 静态路由是否不需要第一个检查 True：不要 False 要
         self.strict_order = strict
@@ -411,8 +422,9 @@ class Router(object):
         keys      = []   # Names of keys
         # 带有分组名的正则表达式，用于匹配(切割)rule
         pattern   = ''   # Regular expression pattern with named groups
+        #(key, in_filter)
         filters   = []   # Lists of wildcard input filters
-        # (key(string), out_filter(function))
+        # (key, out_filter)
         builder   = []   # Data structure for the URL builder
         is_static = True
 
@@ -420,7 +432,7 @@ class Router(object):
             if mode:
                 is_static = False
                 if mode == 'default':
-                    mode = self.default_filter
+                    mode = self.default_filter  # re
                 mask, in_filter, out_filter = self.filters[mode](conf)
                 if not key:
                     pattern += '(?:%s)' % mask
@@ -442,12 +454,12 @@ class Router(object):
 
         if is_static and not self.strict_order:
             self.static.setdefault(method, {})
-            # TODO GARRETT
             self.static[method][self.build(rule)] = (target, None)
             return
 
         try:
             re_pattern = re.compile('^(%s)$' % pattern)
+            # Function not match object.
             re_match = re_pattern.match
         except re.error:
             raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, _e()))
@@ -468,8 +480,11 @@ class Router(object):
             getargs = None
 
         flatpat = _re_flatten(pattern)
+        # (string, string, object, function)
         whole_rule = (rule, flatpat, target, getargs)
 
+        # Route is exist
+        # 路由已经存在
         if (flatpat, method) in self._groups:
             if DEBUG:
                 msg = 'Route <%s %s> overwrites a previously defined route'
@@ -494,11 +509,17 @@ class Router(object):
             comborules.append((combined, rules))
 
     def build(self, _name, *anons, **query):
-        ''' Build an URL by filling the wildcards in a rule. '''
+        """
+        Build an URL by filling the wildcards in a rule.
+
+        通过传入的正则获取创建url
+        """
         builder = self.builder.get(_name)
-        if not builder: raise RouteBuildError("No route with that name.", _name)
+        if not builder:
+            raise RouteBuildError("No route with that name.", _name)
         try:
-            for i, value in enumerate(anons): query['anon%d'%i] = value
+            for i, value in enumerate(anons):
+                query['anon%d' % i] = value
             url = ''.join([f(query.pop(n)) if n else f for (n,f) in builder])
             return url if not query else url+'?'+urlencode(query)
         except KeyError:
