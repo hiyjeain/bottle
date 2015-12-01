@@ -176,16 +176,22 @@ class DictProperty(object):
 
 
 class cached_property(object):
-    ''' A property that is only computed once per instance and then replaces
-        itself with an ordinary attribute. Deleting the attribute resets the
-        property. '''
+    """
+    A property that is only computed once per instance and then replaces
+    itself with an ordinary attribute. Deleting the attribute resets the
+    property.
+
+    一个property（注解）。每一个实例实例智慧计算一次，然后用一个普通attribute替换自己。
+    删除这个attribute则重置这个property
+    """
 
     def __init__(self, func):
         self.__doc__ = getattr(func, '__doc__')
         self.func = func
 
     def __get__(self, obj, cls):
-        if obj is None: return self
+        if obj is None:
+            return self
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
 
@@ -570,10 +576,15 @@ class Router(object):
 
 
 class Route(object):
-    ''' This class wraps a route callback along with route specific metadata and
-        configuration and applies Plugins on demand. It is also responsible for
-        turing an URL path rule into a regular expression usable by the Router.
-    '''
+    """
+    This class wraps a route callback along with route specific metadata and
+    configuration and applies Plugins on demand. It is also responsible for
+    turing an URL path rule into a regular expression usable by the Router.
+
+    用来根据路由制定的元数据和配置来包装一个路由回调，并且应用相应的插件。
+    """
+
+    # TODO GARRETT
 
     def __init__(self, app, rule, method, callback, name=None,
                  plugins=None, skiplist=None, **config):
