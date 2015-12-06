@@ -615,17 +615,29 @@ class Route(object):
 
     @cached_property
     def call(self):
-        ''' The route callback with all plugins applied. This property is
-            created on demand and then cached to speed up subsequent requests.'''
+        """
+        The route callback with all plugins applied. This property is
+        created on demand and then cached to speed up subsequent requests.
+
+        应用了所有插件的route毁掉.这个property是按需创建并且缓存的。用来加速之后的请求
+        """
         return self._make_callback()
 
     def reset(self):
-        ''' Forget any cached values. The next time :attr:`call` is accessed,
-            all plugins are re-applied. '''
+        """
+        Forget any cached values. The next time :attr:`call` is accessed,
+        all plugins are re-applied.
+
+        清除所有缓存的值。 下一次 :attr:'call' 被访问时。所有插件将重新应用。
+        """
         self.__dict__.pop('call', None)
 
     def prepare(self):
-        ''' Do all on-demand work immediately (useful for debugging).'''
+        """
+        Do all on-demand work immediately (useful for debugging).
+
+        立即执行所有有需求时才会进行的工作，用于调试。
+        """
         self.call
 
     @property
@@ -636,7 +648,11 @@ class Route(object):
                     apply=self.plugins, skip=self.skiplist)
 
     def all_plugins(self):
-        ''' Yield all Plugins affecting this route. '''
+        """
+        Yield all Plugins affecting this route.
+
+        yield 所有对这个路由起作用的插件。
+        """
         unique = set()
         for p in reversed(self.app.plugins + self.plugins):
             if True in self.skiplist: break
