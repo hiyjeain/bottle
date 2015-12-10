@@ -181,7 +181,7 @@ class cached_property(object):
     itself with an ordinary attribute. Deleting the attribute resets the
     property.
 
-    一个property（注解）。每一个实例实例智慧计算一次，然后用一个普通attribute替换自己。
+    一个property（注解）。每一个实例实例只会计算一次，然后用一个普通attribute(储存在instance.__dict__替换自己。
     删除这个attribute则重置这个property
     """
 
@@ -576,6 +576,7 @@ class Router(object):
 
 
 class Route(object):
+    # TODO GARRETT
     """
     This class wraps a route callback along with route specific metadata and
     configuration and applies Plugins on demand. It is also responsible for
@@ -584,27 +585,34 @@ class Route(object):
     用来根据路由制定的元数据和配置来包装一个路由回调，并且应用相应的插件。
     """
 
-    # TODO GARRETT
-
     def __init__(self, app, rule, method, callback, name=None,
                  plugins=None, skiplist=None, **config):
         #: The application this route is installed to.
+        #: 这个路由所安装在的application
         self.app = app
         #: The path-rule string (e.g. ``/wiki/:page``).
+        #: 路由的路径规则
         self.rule = rule
         #: The HTTP method as a string (e.g. ``GET``).
+        #: HTTP方法字符串
         self.method = method
         #: The original callback with no plugins applied. Useful for introspection.
+        #: 没有插件应用的原始回调。用于内省
         self.callback = callback
         #: The name of the route (if specified) or ``None``.
+        #: 这个路由的名字，未赋值则为None
         self.name = name or None
         #: A list of route-specific plugins (see :meth:`Bottle.route`).
+        #: 路由专用插件列表 (查看 :meth:'Bottle.route').
         self.plugins = plugins or []
         #: A list of plugins to not apply to this route (see :meth:`Bottle.route`).
+        #: 路由不应用插件列表 (查看 :meth:'Bottle.route').
         self.skiplist = skiplist or []
         #: Additional keyword arguments passed to the :meth:`Bottle.route`
         #: decorator are stored in this dictionary. Used for route-specific
         #: plugin configuration and meta-data.
+        #: 传给 :meth:`Bottle.route` 的附加参数。装饰器储存在这个字典中。用于路由专用
+        #: 插件的配置和元数据
         self.config = ConfigDict().load_dict(config, make_namespaces=True)
 
     def __call__(self, *a, **ka):
@@ -662,6 +670,8 @@ class Route(object):
             if name: unique.add(name)
             yield p
 
+    # Return a function
+    # 返回一个函数
     def _make_callback(self):
         callback = self.callback
         for plugin in self.all_plugins():
