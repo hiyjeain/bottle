@@ -570,11 +570,6 @@ class Router(object):
         # No matching route and no alternative method found. We give up
         raise HTTPError(404, "Not found: " + repr(path))
 
-
-
-
-
-
 class Route(object):
     # TODO GARRETT
     """
@@ -671,6 +666,7 @@ class Route(object):
             yield p
 
     # Return a function
+    # TODO
     # 返回一个函数
     def _make_callback(self):
         callback = self.callback
@@ -689,8 +685,12 @@ class Route(object):
         return callback
 
     def get_undecorated_callback(self):
-        ''' Return the callback. If the callback is a decorated function, try to
-            recover the original function. '''
+        """
+        Return the callback. If the callback is a decorated function, try to
+        recover the original function.
+
+        返回一个回调， 如果这个回调是一个已装饰的函数，则尝试恢复原始函数
+        """
         func = self.callback
         func = getattr(func, '__func__' if py3k else 'im_func', func)
         closure_attr = '__closure__' if py3k else 'func_closure'
@@ -699,14 +699,24 @@ class Route(object):
         return func
 
     def get_callback_args(self):
-        ''' Return a list of argument names the callback (most likely) accepts
-            as keyword arguments. If the callback is a decorated function, try
-            to recover the original function before inspection. '''
+        """
+        Return a list of argument names the callback (most likely) accepts
+        as keyword arguments. If the callback is a decorated function, try
+        to recover the original function before inspection.
+
+        返回callback(最有可能)的关键字参数的的参数名列表, 如def add(a, b, *z) ->
+        ['a', 'b']，如果callback是一个已装饰的函数，则试图获取原始函数的参数名列表
+
+        """
         return getargspec(self.get_undecorated_callback())[0]
 
     def get_config(self, key, default=None):
-        ''' Lookup a config field and return its value, first checking the
-            route.config, then route.app.config.'''
+        """
+        Lookup a config field and return its value, first checking the
+        route.config, then route.app.config.
+
+        以key查找config中的value，先route的config，后application的config
+        """
         for conf in (self.config, self.app.conifg):
             if key in conf: return conf[key]
         return default
