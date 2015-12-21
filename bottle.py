@@ -149,9 +149,10 @@ def makelist(data): # This is just to handy
     elif data: return [data]
     else: return []
 
-
 class DictProperty(object):
-    ''' Property that maps to a key in a local dict-like attribute. '''
+    """
+    Property that maps to a key in a local dict-like attribute.
+    """
     def __init__(self, attr, key=None, read_only=False):
         self.attr, self.key, self.read_only = attr, key, read_only
 
@@ -174,7 +175,6 @@ class DictProperty(object):
         if self.read_only: raise AttributeError("Read-Only property.")
         del getattr(obj, self.attr)[self.key]
 
-
 class cached_property(object):
     """
     A property that is only computed once per instance and then replaces
@@ -195,7 +195,6 @@ class cached_property(object):
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
 
-
 class lazy_attribute(object):
     ''' A property that caches itself to the class object. '''
     def __init__(self, func):
@@ -207,15 +206,9 @@ class lazy_attribute(object):
         setattr(cls, self.__name__, value)
         return value
 
-
-
-
-
-
 ###############################################################################
 # Exceptions and Events ########################################################
 ###############################################################################
-
 
 class BottleException(Exception):
     """
@@ -225,15 +218,9 @@ class BottleException(Exception):
     """
     pass
 
-
-
-
-
-
 ###############################################################################
 # Routing ######################################################################
 ###############################################################################
-
 
 class RouteError(BottleException):
     """
@@ -241,7 +228,6 @@ class RouteError(BottleException):
 
     所有路由相关异常的基类
     """
-
 
 class RouteReset(BottleException):
     """
@@ -254,7 +240,6 @@ class RouteReset(BottleException):
 
 class RouterUnknownModeError(RouteError): pass
 
-
 class RouteSyntaxError(RouteError):
     """
     The route parser found something not supported by this router.
@@ -262,14 +247,12 @@ class RouteSyntaxError(RouteError):
     路由器的路由解析器发现不支持内容
     """
 
-
 class RouteBuildError(RouteError):
     """
     The route could not be built.
 
     路由无法创建
     """
-
 
 def _re_flatten(p):
     """
@@ -284,7 +267,6 @@ def _re_flatten(p):
         return p
     return re.sub(r'(\\*)(\(\?P<[^>]+>|\((?!\?))',
                   lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:', p)
-
 
 class Router(object):
     """
@@ -598,10 +580,10 @@ class Route(object):
         #: 这个路由的名字，未赋值则为None
         self.name = name or None
         #: A list of route-specific plugins (see :meth:`Bottle.route`).
-        #: 路由专用插件列表 (查看 :meth:'Bottle.route').
+        #: 路由专用插件列表 (查看 :meth:`Bottle.route`).
         self.plugins = plugins or []
         #: A list of plugins to not apply to this route (see :meth:`Bottle.route`).
-        #: 路由不应用插件列表 (查看 :meth:'Bottle.route').
+        #: 路由不应用插件列表 (查看 :meth:`Bottle.route`).
         self.skiplist = skiplist or []
         #: Additional keyword arguments passed to the :meth:`Bottle.route`
         #: decorator are stored in this dictionary. Used for route-specific
@@ -666,7 +648,7 @@ class Route(object):
             yield p
 
     # Return a function
-    # TODO
+    # TODO Garrett
     # 返回一个函数
     def _make_callback(self):
         callback = self.callback
@@ -725,11 +707,6 @@ class Route(object):
         cb = self.get_undecorated_callback()
         return '<%s %r %r>' % (self.method, self.rule, cb)
 
-
-
-
-
-
 ###############################################################################
 # Application Object ###########################################################
 ###############################################################################
@@ -740,8 +717,14 @@ class Bottle(object):
         consists of routes, callbacks, plugins, resources and configuration.
         Instances are callable WSGI applications.
 
+        每一个Bottle对象一个单独的独立的web application。这个web application由routes
+        callbacks, plugins, resources 和 configuration组成。
+        实例是可执行的WSGI application.
+
         :param catchall: If true (default), handle all exceptions. Turn off to
                          let debugging middleware handle exceptions.
+                         如果 设为true(默认为true), 捕获所有异常。
+                         设为false 则由调试中间件捕获异常。
     """
 
     def __init__(self, catchall=True, autojson=True):
@@ -1144,75 +1127,117 @@ class Bottle(object):
         return self.wsgi(environ, start_response)
 
 
-
-
-
-
 ###############################################################################
 # HTTP and WSGI Tools ##########################################################
 ###############################################################################
 
 class BaseRequest(object):
-    """ A wrapper for WSGI environment dictionaries that adds a lot of
-        convenient access methods and properties. Most of them are read-only.
+    """
+    A wrapper for WSGI environment dictionaries that adds a lot of
+    convenient access methods and properties. Most of them are read-only.
 
-        Adding new attributes to a request actually adds them to the environ
-        dictionary (as 'bottle.request.ext.<name>'). This is the recommended
-        way to store and access request-specific data.
+    Adding new attributes to a request actually adds them to the environ
+    dictionary (as 'bottle.request.ext.<name>'). This is the recommended
+    way to store and access request-specific data.
+
+    是一个WSGI环境词典的包装类。添加了许多方便的方法和属性，大部分是只读的。
+    添加的属性实际上是添加到环境词典种(如 'bootle.request.ext.<name>')。 这是
+    最为推荐的方式去储存和访问request相关的数据
     """
 
     __slots__ = ('environ')
 
     #: Maximum size of memory buffer for :attr:`body` in bytes.
+    #: :attr:`body`在内存缓存中最大的大小 102400 bytes = 100KB
     MEMFILE_MAX = 102400
 
     def __init__(self, environ=None):
-        """ Wrap a WSGI environ dictionary. """
+        """
+        Wrap a WSGI environ dictionary.
+
+        包装WSGI环境词典
+        """
         #: The wrapped WSGI environ dictionary. This is the only real attribute.
         #: All other attributes actually are read-only properties.
+        #: 包装后的环境词典。这是唯一真实的attribute
+        #: 所有其他的属性实际上都是只读的property
         self.environ = {} if environ is None else environ
         self.environ['bottle.request'] = self
 
     @DictProperty('environ', 'bottle.app', read_only=True)
     def app(self):
-        ''' Bottle application handling this request. '''
+        """
+        Bottle application handling this request.
+
+        持有这个请求的Bottle 应用
+        """
         raise RuntimeError('This request is not connected to an application.')
 
     @DictProperty('environ', 'bottle.route', read_only=True)
     def route(self):
-        """ The bottle :class:`Route` object that matches this request. """
+        """
+        The bottle :class:`Route` object that matches this request.
+
+        匹配这个请求的 :class:`Route` 对象
+        """
         raise RuntimeError('This request is not connected to a route.')
 
     @DictProperty('environ', 'route.url_args', read_only=True)
     def url_args(self):
-        """ The arguments extracted from the URL. """
+        """
+        The arguments extracted from the URL.
+
+        URL中的参数
+        """
         raise RuntimeError('This request is not connected to a route.')
 
     @property
     def path(self):
-        ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix
-            broken clients and avoid the "empty path" edge case). '''
+        """
+        The value of ``PATH_INFO`` with exactly one prefixed slash (to fix
+        broken clients and avoid the "empty path" edge case).
+
+        ``PATH_INFO``的值。如果值有多个前置斜杠，则修复为一个。
+        """
         return '/' + self.environ.get('PATH_INFO','').lstrip('/')
 
     @property
     def method(self):
-        ''' The ``REQUEST_METHOD`` value as an uppercase string. '''
+        """
+        The ``REQUEST_METHOD`` value as an uppercase string.
+
+        大写的 ``REQUEST_METHOD``的值
+        """
         return self.environ.get('REQUEST_METHOD', 'GET').upper()
 
     @DictProperty('environ', 'bottle.request.headers', read_only=True)
     def headers(self):
-        ''' A :class:`WSGIHeaderDict` that provides case-insensitive access to
-            HTTP request headers. '''
+        """
+        A :class:`WSGIHeaderDict` that provides case-insensitive access to
+        HTTP request headers.
+
+        一个 :class:`WSGIHeaderDict` 对象, 可以用大小写不敏感的方式在其中访问到
+        HTTP 请求的 headers
+        """
         return WSGIHeaderDict(self.environ)
 
     def get_header(self, name, default=None):
-        ''' Return the value of a request header, or a given default value. '''
+        """
+        Return the value of a request header, or a given default value.
+
+        返回请求的header的值，如果为空则返回设置的默认值
+        """
         return self.headers.get(name, default)
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
     def cookies(self):
-        """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
-            decoded. Use :meth:`get_cookie` if you expect signed cookies. """
+        """
+        Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
+        decoded. Use :meth:`get_cookie` if you expect signed cookies.
+
+        解析为 :class:`FormsDict`对象的Cookies. 签名的cookies不会被解码。如果想
+        获取签名的cookies，请使用:meth:`get_cookie`方法。
+        """
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE','')).values()
         return FormsDict((c.key, c.value) for c in cookies)
 
@@ -1229,10 +1254,16 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.query', read_only=True)
     def query(self):
-        ''' The :attr:`query_string` parsed into a :class:`FormsDict`. These
-            values are sometimes called "URL arguments" or "GET parameters", but
-            not to be confused with "URL wildcards" as they are provided by the
-            :class:`Router`. '''
+        """
+        The :attr:`query_string` parsed into a :class:`FormsDict`. These
+        values are sometimes called "URL arguments" or "GET parameters", but
+        not to be confused with "URL wildcards" as they are provided by the
+        :class:`Router`.
+
+        被解析为 :class:`FormsDict`的 :attr:`query_string`。 这些值有些时候被
+        叫做URL参数或者GET参数。但不要与URL通配符混肴，因为URL通配符是由
+        :class:`Router` 所生成
+        """
         get = self.environ['bottle.get'] = FormsDict()
         pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
         for key, value in pairs:
@@ -1241,10 +1272,16 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.forms', read_only=True)
     def forms(self):
-        """ Form values parsed from an `url-encoded` or `multipart/form-data`
-            encoded POST or PUT request body. The result is returned as a
-            :class:`FormsDict`. All keys and values are strings. File uploads
-            are stored separately in :attr:`files`. """
+        """
+        Form values parsed from an `url-encoded` or `multipart/form-data`
+        encoded POST or PUT request body. The result is returned as a
+        :class:`FormsDict`. All keys and values are strings. File uploads
+        are stored separately in :attr:`files`.
+
+        从POST或者GET请求体中编码后的`url-encoded`或者`multipart/form-data`中
+        解析出来的Form values。其类型为:class:`FormsDict`。所有的值和键都为
+        string。文件上传被单独储存为在:attr:`files`
+        """
         forms = FormsDict()
         for name, item in self.POST.allitems():
             if not isinstance(item, FileUpload):
