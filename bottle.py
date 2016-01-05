@@ -1290,8 +1290,13 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.params', read_only=True)
     def params(self):
-        """ A :class:`FormsDict` with the combined values of :attr:`query` and
-            :attr:`forms`. File uploads are stored in :attr:`files`. """
+        """
+        A :class:`FormsDict` with the combined values of :attr:`query` and
+        :attr:`forms`. File uploads are stored in :attr:`files`.
+
+        结合了:attr:`query`和:attr:`forms`的值的:class:`FormsDict`。文件上传存
+        储为:attr:`files`
+        """
         params = FormsDict()
         for key, value in self.query.allitems():
             params[key] = value
@@ -1301,9 +1306,12 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.files', read_only=True)
     def files(self):
-        """ File uploads parsed from `multipart/form-data` encoded POST or PUT
-            request body. The values are instances of :class:`FileUpload`.
+        """
+        File uploads parsed from `multipart/form-data` encoded POST or PUT
+        request body. The values are instances of :class:`FileUpload`.
 
+        POST或者PUT请求体中的`multipart/form-data`解析出的文件上传。其类型为
+        :class:`FileUpload`
         """
         files = FormsDict()
         for name, item in self.POST.allitems():
@@ -1313,10 +1321,16 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.json', read_only=True)
     def json(self):
-        ''' If the ``Content-Type`` header is ``application/json``, this
-            property holds the parsed content of the request body. Only requests
-            smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
-            exhaustion. '''
+        """
+        If the ``Content-Type`` header is ``application/json``, this
+        property holds the parsed content of the request body. Only requests
+        smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
+        exhaustion.
+
+        如果``Content-Type`` header 是 ``application/json``，这个属性持有
+        解析后的请求体内容。只有请求体的大小小于:attr:`MEMFILE_MAX`时，才会执行
+        以此来避免内存耗尽
+        """
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
         if ctype == 'application/json':
             b = self._get_body_string()
@@ -1378,8 +1392,12 @@ class BaseRequest(object):
         return body
 
     def _get_body_string(self):
-        ''' read body until content-length or MEMFILE_MAX into a string. Raise
-            HTTPError(413) on requests that are to large. '''
+        """
+        read body until content-length or MEMFILE_MAX into a string. Raise
+        HTTPError(413) on requests that are to large.
+
+
+        """
         clen = self.content_length
         if clen > self.MEMFILE_MAX:
             raise HTTPError(413, 'Request to large')
