@@ -162,17 +162,21 @@ class DictProperty(object):
         return self
 
     def __get__(self, obj, cls):
-        if obj is None: return self
+        if obj is None:
+            return self
         key, storage = self.key, getattr(obj, self.attr)
-        if key not in storage: storage[key] = self.getter(obj)
+        if key not in storage:
+            storage[key] = self.getter(obj)
         return storage[key]
 
     def __set__(self, obj, value):
-        if self.read_only: raise AttributeError("Read-Only property.")
+        if self.read_only:
+            raise AttributeError("Read-Only property.")
         getattr(obj, self.attr)[self.key] = value
 
     def __delete__(self, obj):
-        if self.read_only: raise AttributeError("Read-Only property.")
+        if self.read_only:
+            raise AttributeError("Read-Only property.")
         del getattr(obj, self.attr)[self.key]
 
 class cached_property(object):
@@ -1643,19 +1647,27 @@ class HeaderProperty(object):
 
 
 class BaseResponse(object):
-    """ Storage class for a response body as well as headers and cookies.
+    """
+    Storage class for a response body as well as headers and cookies.
+    Response Body的存储类，同样也储存了Headers和Cookies
 
-        This class does support dict-like case-insensitive item-access to
-        headers, but is NOT a dict. Most notably, iterating over a response
-        yields parts of the body and not the headers.
+    This class does support dict-like case-insensitive item-access to
+    headers, but is NOT a dict. Most notably, iterating over a response
+    yields parts of the body and not the headers.
+    这个类headers的确支持忽略大小写的字典式访问方式，但其并不是一个字典。最为需要
+    注意的是，这个类的迭代产生的是部分body而不是headers。
 
-        :param body: The response body as one of the supported types.
-        :param status: Either an HTTP status code (e.g. 200) or a status line
-                       including the reason phrase (e.g. '200 OK').
-        :param headers: A dictionary or a list of name-value pairs.
+    :param body: The response body as one of the supported types.
+                 Response的body。其为一个支持的类型。
+    :param status: Either an HTTP status code (e.g. 200) or a status line
+                   including the reason phrase (e.g. '200 OK').
+                   Https状态码(200)，或者是包含原因的状态行('200 OK')
+    :param headers: A dictionary or a list of name-value pairs.
+                    一个字典或者name-value键值对的列表
 
-        Additional keyword arguments are added to the list of headers.
-        Underscores in the header name are replaced with dashes.
+    Additional keyword arguments are added to the list of headers.
+    Underscores in the header name are replaced with dashes.
+    附加的关键字参数会被添加到headers列表中。header中的下划线(_)将被短横线(-)代替。
     """
 
     default_status = 200
